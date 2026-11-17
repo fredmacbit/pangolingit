@@ -2,7 +2,7 @@ cask "pangolingit" do
   # version and sha256 are rewritten by tools/create_dmg.sh for each release image; until the first
   # published image the checksum is not pinned.
   version "1.0.0"
-  sha256 :no_check
+  sha256 "a045a45948df2129ad7217905dd526aff2918bd8e4976e8fce380b4027e6fec4"
 
   url "https://github.com/fredmacbit/pangolingit/releases/download/v#{version}/PangolinGit.dmg"
   name "PangolinGit"
