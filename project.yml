@@ -1,0 +1,191 @@
+# XcodeGen spec — generates PangolinGit.xcodeproj (run `xcodegen generate` after adding/removing files).
+name: PangolinGit
+
+options:
+  bundleIdPrefix: be.macbit.pangolingit
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+packages:
+  PangolinGitCore:
+    path: PangolinGitCore
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    # Local builds are ad-hoc signed; no App Group or provisioning profile is needed. For distribution
+    # pass CODE_SIGN_IDENTITY="Developer ID Application: …" (see tools/make_installer.sh).
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    DEAD_CODE_STRIPPING: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+targets:
+  PangolinGit:
+    type: application
+    platform: macOS
+    sources:
+      - path: PangolinGit
+        excludes:
+          - Tests/**
+          - Info.plist
+          - PangolinGit.entitlements
+      - path: tools/uninstall.sh
+        buildPhase: resources
+      - path: PangolinGitAgent/be.macbit.pangolingit.agent.plist
+        buildPhase:
+          copyFiles:
+            destination: wrapper
+            subpath: Contents/Library/LaunchAgents
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: be.macbit.pangolingit
+        PRODUCT_NAME: PangolinGit
+        INFOPLIST_FILE: PangolinGit/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PangolinGit/PangolinGit.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        # Localisation (QF-25 / CC-06): String(localized:) and NSLocalizedString call sites are
+        # extracted into Resources/Localizable.xcstrings at build time.
+        SWIFT_EMIT_LOC_STRINGS: YES
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    dependencies:
+      - package: PangolinGitCore
+      - target: PangolinGitFinder
+        embed: true
+        codeSign: true
+      - target: PangolinGitAgent
+        embed: true
+        codeSign: true
+        copy:
+          destination: executables
+      - target: pangolin-askpass
+        embed: true
+        codeSign: true
+        copy:
+          destination: executables
+      - target: pangolin-wcrev
+        embed: true
+        codeSign: true
+        copy:
+          destination: executables
+      - target: pangolin
+        embed: true
+        codeSign: true
+        copy:
+          destination: executables
+      - sdk: FinderSync.framework
+      - sdk: ServiceManagement.framework
+
+  PangolinGitFinder:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: PangolinGitFinder
+        excludes:
+          - Info.plist
+          - PangolinGitFinder.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: be.macbit.pangolingit.finder
+        PRODUCT_NAME: PangolinGitFinder
+        INFOPLIST_FILE: PangolinGitFinder/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PangolinGitFinder/PangolinGitFinder.entitlements
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
+    dependencies:
+      - package: PangolinGitCore
+      - sdk: FinderSync.framework
+
+  PangolinGitAgent:
+    type: tool
+    platform: macOS
+    sources:
+      - path: PangolinGitAgent
+        excludes:
+          - "*.plist"
+          - "*.entitlements"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: be.macbit.pangolingit.agent
+        PRODUCT_NAME: PangolinGitAgent
+        CODE_SIGN_ENTITLEMENTS: PangolinGitAgent/PangolinGitAgent.entitlements
+        SKIP_INSTALL: YES
+    dependencies:
+      - package: PangolinGitCore
+
+  pangolin-askpass:
+    type: tool
+    platform: macOS
+    sources:
+      - path: PangolinGitAskPass
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: be.macbit.pangolingit.askpass
+        PRODUCT_NAME: pangolin-askpass
+        SKIP_INSTALL: YES
+    dependencies:
+      - package: PangolinGitCore
+
+  pangolin-wcrev:
+    type: tool
+    platform: macOS
+    sources:
+      - path: tools/pangolin-wcrev.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: be.macbit.pangolingit.wcrev
+        PRODUCT_NAME: pangolin-wcrev
+        SKIP_INSTALL: YES
+    dependencies:
+      - package: PangolinGitCore
+
+  # `pangolin` command-line shim (TortoiseGitProc): builds pangolingit:// requests.
+  pangolin:
+    type: tool
+    platform: macOS
+    sources:
+      - path: tools/pangolin.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: be.macbit.pangolingit.cli
+        PRODUCT_NAME: pangolin
+        SKIP_INSTALL: YES
+    dependencies:
+      - package: PangolinGitCore
+
+  PangolinGitTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: PangolinGit/Tests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: be.macbit.pangolingit.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PangolinGit.app/Contents/MacOS/PangolinGit"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: PangolinGit
+      - package: PangolinGitCore
+
+schemes:
+  PangolinGit:
+    build:
+      targets:
+        PangolinGit: all
+        PangolinGitTests: [test]
+    test:
+      targets:
+        - PangolinGitTests
+        - package: PangolinGitCore/PangolinGitCoreTests
+    run:
+      config: Debug
+    archive:
+      config: Release

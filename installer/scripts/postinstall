@@ -1,0 +1,33 @@
+#!/bin/bash
+# PangolinGit postinstall (runs as root).
+# Registers the app, its Finder extension and its status agent for the logged-in user and restarts
+# Finder so the context menu appears. PangolinGit itself stays in the background, like TortoiseGitProc:
+# Finder starts it for the first context-menu command, which also shows the first-run wizard.
+# It is only opened here when macOS still needs the user to approve the extension or the agent.
+APP="${2%/}/PangolinGit.app"
+log() { echo "PangolinGit postinstall: $*"; }
+
+# Locally built packages are not notarized; make sure Gatekeeper doesn't block the helpers.
+/usr/bin/xattr -dr com.apple.quarantine "$APP" 2>/dev/null
+
+CONSOLE_USER=$(/usr/bin/stat -f%Su /dev/console)
+if [ -z "$CONSOLE_USER" ] || [ "$CONSOLE_USER" = "root" ] || [ "$CONSOLE_USER" = "_mbsetupuser" ]; then
+    log "no user logged in; registration will happen when PangolinGit is first opened."
+    exit 0
+fi
+CONSOLE_UID=$(/usr/bin/id -u "$CONSOLE_USER")
+as_user() { /bin/launchctl asuser "$CONSOLE_UID" /usr/bin/sudo -u "$CONSOLE_USER" "$@"; }
+
+NEEDS_USER=0
+if ! as_user "$APP/Contents/MacOS/PangolinGit" --register-services; then
+    log "registration needs the user's approval; opening PangolinGit to guide them."
+    NEEDS_USER=1
+fi
+
+# Finder only picks up a newly enabled Sync extension reliably after a restart (it relaunches itself).
+as_user /usr/bin/killall Finder 2>/dev/null
+
+if [ "$NEEDS_USER" = 1 ]; then
+    as_user /usr/bin/open "$APP"
+fi
+exit 0

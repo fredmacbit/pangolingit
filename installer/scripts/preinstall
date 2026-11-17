@@ -1,0 +1,8 @@
+#!/bin/bash
+# PangolinGit preinstall (runs as root): stop a running copy so the bundle can be replaced.
+/usr/bin/pkill -x PangolinGit 2>/dev/null
+# Only stop the agent process; launchd starts the new binary on the next request. Do NOT
+# `launchctl bootout` it: for an SMAppService job that unloads it while macOS still lists it as
+# enabled, so it would never come back.
+/usr/bin/pkill -x PangolinGitAgent 2>/dev/null
+exit 0

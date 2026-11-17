@@ -1,0 +1,41 @@
+To build an application like PangolinGit that integrates deeply into macOS Finder (similar to how TortoiseGit integrates into Windows Explorer), Apple provides specific extension APIs.
+
+Because macOS is structured differently from Windows shell extensions (which use COM objects), your primary options for hooking into the Finder interface fall into three categories:
+
+
+1. FinderSync Framework (Primary Solution)
+
+The FinderSync framework is Apple’s official, sandboxed API for apps that monitor local directories (like Git repositories, Dropbox, or OneDrive).
+
+    Contextual Menu Items: Allows you to add custom context menu items (e.g., Git Commit..., Git Push..., Show Diff) when a user right-clicks a file or directory inside a monitored folder.
+
+    Status Badges: Lets you apply custom icon overlays/badges to files (e.g., green checkmarks for unmodified files, red exclamations for untracked/modified files).
+
+    Toolbar Buttons: Adds custom action buttons directly to the Finder window toolbar.
+
+    How it works: Your main application bundles an app extension target of type FinderSync. When a user opens a folder monitored by PangolinGit, the system activates the extension process to supply badge statuses and menu items.
+
+2. macOS Quick Actions / Services API (Secondary Option)If you want system-wide right-click options without running a background directory monitor:Services Menu / Quick Actions: Lets users select files or folders, right-click, and choose an action from the Quick Actions submenu.Implementation: Built using macOS App Extensions (ActionExtension or Automator/Shortcuts workflows) or traditional macOS NSServices.Drawback: It does not support file badges/overlays or direct top-level context menu placement without going into a submenu.
+
+3. macOS Shortcuts Integration (Modern Automation Hook)From modern macOS releases onward, Apple encourages developer integration via Shortcuts:You expose App Intents in Swift (via the AppIntents framework).Users can trigger your Git actions (Stage, Commit, Branch) directly from the Finder right-click menu under "Quick Actions", or invoke them via Siri/Raycast/Spotlight.
+
+Key Differences: 
+
+TortoiseGit (Windows) vs. PangolinGit (macOS)
+
+Feature				Windows (TortoiseGit)			macOS (FinderSync Extension)
+Hook TypeS			hell Extension DLL			App Extension (Sandboxed)
+Submenus			Unlimited dynamic nested menus		Supported, but subject to system UI guidelines
+Status Overlay Badges		Native Shell Icon Overlays		Built-in FIFinderSyncController badges
+Permissions			System/Registry level			Requires user permission under System Settings > Extensions
+
+Recommended Swift Architecture for PangolinGit
+
+[ PangolinGit Main App ]
+       │
+       ├── Shared App Group Container (Local Repos, Configs, Credentials)
+       │
+       └── [ PangolinGit Finder Extension ] (FIFinderSync)
+             ├── Observes Git working trees via libgit2 / SwiftGit2
+             ├── Sets badge images (`setBadgeImage:label:forBadgeID:`)
+             └── Generates contextual menus (`menuForMenuKind:`)

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sample configuration profile for administrators: the macOS counterpart of TortoiseGit's HKLM
+  policies. Deploy with an MDM (or double-click for a manual install) to preset PangolinGit settings
+  for every user. Keys under advancedSettings are the options of Settings ▸ Advanced:
+    VersionCheck    "false" disables update checks entirely
+    UpdateCheckURL  GitHub-releases-compatible feed of an internal mirror
+  Other preference keys (e.g. automaticUpdateCheck, extraPath, credentialHelper, contextMenuEntries)
+  can be forced the same way.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>PayloadType</key>
+            <string>com.apple.ManagedClient.preferences</string>
+            <key>PayloadIdentifier</key>
+            <string>be.macbit.pangolingit.managed.preferences</string>
+            <key>PayloadUUID</key>
+            <string>6D1C2B0E-7A57-4E0B-9C3E-2F5B1A1E9C01</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+            <key>PayloadContent</key>
+            <dict>
+                <key>group.be.macbit.pangolingit</key>
+                <dict>
+                    <key>Forced</key>
+                    <array>
+                        <dict>
+                            <key>mcx_preference_settings</key>
+                            <dict>
+                                <key>advancedSettings</key>
+                                <dict>
+                                    <key>VersionCheck</key>
+                                    <string>true</string>
+                                    <key>UpdateCheckURL</key>
+                                    <string>https://git.example.com/api/v1/repos/tools/PangolinGit/releases</string>
+                                </dict>
+                                <key>automaticUpdateCheck</key>
+                                <true/>
+                            </dict>
+                        </dict>
+                    </array>
+                </dict>
+            </dict>
+        </dict>
+    </array>
+    <key>PayloadDisplayName</key>
+    <string>PangolinGit Settings</string>
+    <key>PayloadIdentifier</key>
+    <string>be.macbit.pangolingit.managed</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>0B7E5C64-3F0A-4D4B-8E61-9B2C7D4A5E10</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>

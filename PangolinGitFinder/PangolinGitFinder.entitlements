@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Finder Sync extensions must be sandboxed. -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <!-- Allows connecting to the status agent's Mach service; no App Group (and thus no provisioning
+         profile) is required, so ad-hoc and Developer ID builds both work. -->
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>group.be.macbit.pangolingit.agent</string>
+    </array>
+</dict>
+</plist>
